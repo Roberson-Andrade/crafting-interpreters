@@ -1,12 +1,14 @@
 import { Lox } from "./lox";
 
+const args = Bun.argv.splice(1);
+
 const lox = new Lox();
 
-if (Bun.argv.length > 2) {
+if (args.length > 1) {
   console.log("Usage: jlox [script]")
   process.exit(64);
-} else if (Bun.argv.length === 2) {
-  lox.runFile(Bun.argv[1]!)
+} else if (args.length === 1) {
+  lox.runFile(args[0])
 } else {
   lox.runPrompt();
 }
