@@ -71,6 +71,8 @@ export class Scanner {
         if (this.match('/')) {
           // A comment goes until the end of the line.
           while (this.peek() != '\n' && !this.isAtEnd()) this.advance();
+        } else if (this.match('*')) {
+          this.blockComment();
         } else {
           this.addToken(TokenType.SLASH);
         }
@@ -146,6 +148,23 @@ export class Scanner {
     if (!type) type = TokenType.IDENTIFIER;
 
     this.addToken(type);
+  }
+
+  private blockComment() {
+    while (!(this.peek() === '*' && this.peekNext() === '/') && !this.isAtEnd()) {
+      if (this.peek() === '\n') this.line++;
+
+
+      this.advance();
+    }
+
+
+    console.log("peek", this.peek())
+    console.log("peeknext", this.peekNext())
+    console.log("end", this.isAtEnd())
+
+    this.advance(); // for the *
+    this.advance(); // for the /
   }
 
   private isAtEnd() {

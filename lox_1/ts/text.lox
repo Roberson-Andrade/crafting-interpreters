@@ -1,5 +1,13 @@
+
+// this is a simple comment
 var oi = "string"
 
+/* this is a block comment inline */
 while(oi != "peido") {
     1 + 1 * 3;
-  }
+}
+
+/*
+ * this is a block comment multiline
+ * */
+var tchau = "number"
