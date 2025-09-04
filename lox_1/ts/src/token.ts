@@ -1,4 +1,4 @@
-import { TokenType } from "./TokenType"
+import type { TokenType } from "./token-type";
 
 export class Token {
   constructor(private type: TokenType, private lexeme: string, private literal: unknown | null, private line: number) { }

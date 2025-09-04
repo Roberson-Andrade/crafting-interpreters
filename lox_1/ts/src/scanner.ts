@@ -1,6 +1,6 @@
 import { Lox } from "./lox";
 import { Token } from "./token";
-import { TokenType } from "./TokenType";
+import { TokenType } from "./token-type";
 
 export class Scanner {
   private tokens: Token[] = [];
