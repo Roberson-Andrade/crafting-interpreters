@@ -1,0 +1,5 @@
+var oi = "string"
+
+while(oi != "peido") {
+    1 + 1 * 3;
+  }

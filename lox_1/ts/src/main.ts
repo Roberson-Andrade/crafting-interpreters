@@ -1,6 +1,6 @@
 import { Lox } from "./lox";
 
-const args = Bun.argv.splice(1);
+const args = Bun.argv.splice(2);
 
 const lox = new Lox();
 

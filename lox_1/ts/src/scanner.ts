@@ -9,6 +9,25 @@ export class Scanner {
   private current: number = 0;
   private line: number = 1;
 
+  private keywords: Record<string, TokenType> = {
+    "and": TokenType.AND,
+    "class": TokenType.CLASS,
+    "else": TokenType.ELSE,
+    "false": TokenType.FALSE,
+    "for": TokenType.FOR,
+    "fun": TokenType.FUN,
+    "if": TokenType.IF,
+    "nil": TokenType.NIL,
+    "or": TokenType.OR,
+    "print": TokenType.PRINT,
+    "return": TokenType.RETURN,
+    "super": TokenType.SUPER,
+    "this": TokenType.THIS,
+    "true": TokenType.TRUE,
+    "var": TokenType.VAR,
+    "while": TokenType.WHILE,
+  }
+
   constructor(private source: string) { }
 
   scanTokens(): Token[] {
@@ -71,7 +90,13 @@ export class Scanner {
         break;
 
       default:
-        Lox.error(this.line, "Unexpected character.");
+        if (this.isDigit(c)) {
+          this.number();
+        } else if (this.isAlpha(c)) {
+          this.identifier();
+        } else {
+          Lox.error(this.line, "Unexpected character.");
+        }
         break;
     }
   }
@@ -99,6 +124,30 @@ export class Scanner {
     this.addToken(TokenType.STRING, value);
   }
 
+  private number() {
+    while (this.isDigit(this.peek())) this.advance();
+
+    if (this.peek() == '.' && this.isDigit(this.peekNext())) {
+      this.advance();
+
+      while (this.isDigit(this.peek())) this.advance();
+    }
+
+
+    this.addToken(TokenType.NUMBER, Number(this.source.substring(this.start, this.current)));
+  }
+
+  private identifier() {
+    while (this.isAlphaNumeric(this.peek())) this.advance();
+
+    const text = this.source.substring(this.start, this.current);
+    let type = this.keywords[text]
+
+    if (!type) type = TokenType.IDENTIFIER;
+
+    this.addToken(type);
+  }
+
   private isAtEnd() {
     return this.current >= this.source.length;
   }
@@ -121,4 +170,23 @@ export class Scanner {
     return this.source.charAt(this.current);
   }
 
+  private peekNext() {
+    if (this.current + 1 >= this.source.length) return '\0';
+
+    return this.source.charAt(this.current + 1);
+  }
+
+  private isDigit(c: string) {
+    return c >= '0' && c <= '9';
+  }
+
+  private isAlpha(c: string) {
+    return (c >= 'a' && c <= 'z') ||
+      (c >= 'A' && c <= 'Z') ||
+      c == '_';
+  }
+
+  private isAlphaNumeric(c: string) {
+    return this.isAlpha(c) || this.isDigit(c);
+  }
 }
