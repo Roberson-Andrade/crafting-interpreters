@@ -2,7 +2,7 @@ import type { Assign, Binary, Expr, Grouping, Literal, Unary, Variable, Visitor 
 
 export class AstPrinter implements Visitor<string> {
   print(expr: Expr) {
-    return expr.accept<string>(this);
+    console.log(expr.accept<string>(this))
   }
 
   parenthesize(name: string, ...exprs: Expr[]) {
@@ -17,7 +17,7 @@ export class AstPrinter implements Visitor<string> {
 
     builder.push(")");
 
-    return builder.join();
+    return builder.join("");
   }
 
   visitBinaryExpr(expr: Binary): string {
@@ -38,12 +38,12 @@ export class AstPrinter implements Visitor<string> {
     return this.parenthesize(expr.operator.lexeme, expr.right);
   }
 
-  visitAssignExpr(expr: Assign): string {
-    return this.parenthesize(expr.operator.lexeme, expr.right);
+  visitAssignExpr(_: Assign): string {
+    return ''
 
   }
 
-  visitVariableExpr(expr: Variable): string {
-    return this.parenthesize(expr.operator.lexeme, expr.right);
+  visitVariableExpr(_: Variable): string {
+    return ''
   }
 }

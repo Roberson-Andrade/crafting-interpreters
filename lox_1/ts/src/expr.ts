@@ -29,7 +29,7 @@ export class Binary extends Expr {
 }
 
 export class Unary extends Expr {
-  constructor(public token: Token, public right: Expr) {
+  constructor(public operator: Token, public right: Expr) {
     super();
   }
 
@@ -40,7 +40,7 @@ export class Unary extends Expr {
 
 
 export class Variable extends Expr {
-  constructor(public token: Token) {
+  constructor(public operator: Token) {
     super();
   }
 
@@ -50,7 +50,7 @@ export class Variable extends Expr {
 }
 
 export class Grouping extends Expr {
-  constructor(public expr: Expr) {
+  constructor(public expression: Expr) {
     super();
   }
 
@@ -60,7 +60,7 @@ export class Grouping extends Expr {
 }
 
 export class Assign extends Expr {
-  constructor(public token: Token, public expr: Expr) {
+  constructor(public token: Token, public expression: Expr) {
     super();
   }
 
