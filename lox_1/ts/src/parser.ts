@@ -1,4 +1,6 @@
-import { Binary, Grouping, Literal, Unary } from "./expr";
+import { Binary, Expr, Grouping, Literal, Unary } from "./expr";
+import { Lox } from "./lox";
+import { ParserError } from "./parser-error";
 import { Token } from "./token";
 import { TokenType } from "./token-type";
 
@@ -64,7 +66,7 @@ export class Parser {
     return expr;
   }
 
-  private unary() {
+  private unary(): Expr {
     if (this.match(TokenType.BANG, TokenType.MINUS)) {
       const operator = this.previous();
       const right = this.unary();
@@ -75,7 +77,7 @@ export class Parser {
     return this.primary();
   }
 
-  private primary() {
+  private primary(): Expr {
     if (this.match(TokenType.FALSE)) return new Literal(false);
     if (this.match(TokenType.TRUE)) return new Literal(true);
     if (this.match(TokenType.NIL)) return new Literal(null);
@@ -91,6 +93,14 @@ export class Parser {
 
       return new Grouping(expr);
     }
+
+    throw this.error(this.peek(), "Expect expression.");
+  }
+
+  private consume(type: TokenType, message: string) {
+    if (this.check(type)) return this.advance();
+
+    throw this.error(this.peek(), message);
   }
 
   private match(...types: TokenType[]) {
@@ -127,5 +137,10 @@ export class Parser {
 
   private previous() {
     return this.tokens[this.current - 1]!;
+  }
+
+  private error(token: Token, message: string) {
+    Lox.error(token.line, message, token)
+    return new ParserError();
   }
 }

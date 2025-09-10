@@ -1,4 +1,6 @@
 import { Scanner } from "./scanner";
+import { Token } from "./token";
+import { TokenType } from "./token-type";
 
 export class Lox {
   static hadError = false;
@@ -36,7 +38,16 @@ export class Lox {
     }
   }
 
-  static error(line: number, message: string) {
+  static error(line: number, message: string, token?: Token) {
+    if (token) {
+      if (token.type == TokenType.EOF) {
+        this.report(token.line, " at end", message);
+      } else {
+        this.report(token.line, " at '" + token.lexeme + "'", message);
+      }
+      return
+    }
+
     Lox.report(line, "", message);
   }
 
