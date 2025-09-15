@@ -159,10 +159,6 @@ export class Scanner {
     }
 
 
-    console.log("peek", this.peek())
-    console.log("peeknext", this.peekNext())
-    console.log("end", this.isAtEnd())
-
     this.advance(); // for the *
     this.advance(); // for the /
   }

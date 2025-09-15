@@ -1,3 +1,5 @@
+import { AstPrinter } from "./ast-printer";
+import { Parser } from "./parser";
 import { Scanner } from "./scanner";
 import { Token } from "./token";
 import { TokenType } from "./token-type";
@@ -10,9 +12,14 @@ export class Lox {
 
     const tokens = scanner.scanTokens();
 
-    for (const token of tokens) {
-      console.log(token);
-    }
+    const parser = new Parser(tokens);
+
+    const expression = parser.parse();
+
+    if (Lox.hadError || !expression) return;
+
+
+    new AstPrinter().print(expression)
   }
 
   async runPrompt() {

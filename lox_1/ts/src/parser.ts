@@ -9,6 +9,14 @@ export class Parser {
 
   constructor(private tokens: Token[]) { }
 
+  public parse() {
+    try {
+      return this.expression();
+    } catch (error) {
+      return null;
+    }
+  }
+
   private expression() {
     return this.equality();
   }
@@ -142,5 +150,27 @@ export class Parser {
   private error(token: Token, message: string) {
     Lox.error(token.line, message, token)
     return new ParserError();
+  }
+
+  private synchronize() {
+    this.advance();
+
+    while (!this.isAtEnd()) {
+      if (this.previous().type === TokenType.SEMICOLON) return;
+
+      switch (this.peek().type) {
+        case TokenType.CLASS:
+        case TokenType.FUN:
+        case TokenType.VAR:
+        case TokenType.FOR:
+        case TokenType.IF:
+        case TokenType.WHILE:
+        case TokenType.PRINT:
+        case TokenType.RETURN:
+          return;
+      }
+
+      this.advance();
+    }
   }
 }
