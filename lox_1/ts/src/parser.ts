@@ -18,7 +18,15 @@ export class Parser {
   }
 
   private expression() {
-    return this.equality();
+    let expr = this.equality();
+
+    while (this.match(TokenType.COMMA)) {
+      const operator = this.previous();
+      const right = this.equality();
+      expr = new Binary(expr, operator, right);
+    }
+
+    return expr;
   }
 
   private equality() {
