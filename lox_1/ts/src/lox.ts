@@ -1,11 +1,15 @@
-import { AstPrinter } from "./ast-printer";
+import { Interpreter } from "./interpreter";
 import { Parser } from "./parser";
+import { LoxRuntimeError } from "./runtime-error";
 import { Scanner } from "./scanner";
 import { Token } from "./token";
 import { TokenType } from "./token-type";
 
 export class Lox {
+  static interpreter = new Interpreter();
+
   static hadError = false;
+  static hadRuntimeError = false;
 
   private run(source: string) {
     const scanner = new Scanner(source);
@@ -18,8 +22,7 @@ export class Lox {
 
     if (Lox.hadError || !expression) return;
 
-
-    new AstPrinter().print(expression)
+    Lox.interpreter.interpret(expression);
   }
 
   async runPrompt() {
@@ -40,9 +43,8 @@ export class Lox {
 
     this.run(await file.text());
 
-    if (Lox.hadError) {
-      process.exit(65);
-    }
+    if (Lox.hadError) process.exit(65);
+    if (Lox.hadRuntimeError) process.exit(70);
   }
 
   static error(line: number, message: string, token?: Token) {
@@ -61,5 +63,12 @@ export class Lox {
   static report(line: number, where: string, message: string) {
     console.log(`[line ${line}] Error: ${where}: ${message}`);
     Lox.hadError = true;
+  }
+
+  static runtimeError(error: LoxRuntimeError) {
+    if (error instanceof LoxRuntimeError) {
+      console.log(error.message +
+        "\n[line " + error.token.line + "]");
+    }
   }
 }
