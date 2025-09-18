@@ -1,4 +1,4 @@
-import type { Assign, Binary, Expr, Grouping, Literal, Unary, Variable, Visitor } from "./expr";
+import type { Assign, Binary, Conditional, Expr, Grouping, Literal, Unary, Variable, Visitor } from "./expr";
 
 export class AstPrinter implements Visitor<string> {
   print(expr: Expr) {
@@ -39,11 +39,15 @@ export class AstPrinter implements Visitor<string> {
   }
 
   visitAssignExpr(_: Assign): string {
-    return ''
+    return '';
 
   }
 
   visitVariableExpr(_: Variable): string {
-    return ''
+    return '';
+  }
+
+  visitConditionalExpr(expr: Conditional): string {
+    return this.parenthesize('?:', expr.condition, expr.thenBranch, expr.elseBranch);
   }
 }

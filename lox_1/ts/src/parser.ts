@@ -1,4 +1,4 @@
-import { Binary, Expr, Grouping, Literal, Unary } from "./expr";
+import { Binary, Conditional, Expr, Grouping, Literal, Unary } from "./expr";
 import { Lox } from "./lox";
 import { ParserError } from "./parser-error";
 import { Token } from "./token";
@@ -18,12 +18,28 @@ export class Parser {
   }
 
   private expression() {
-    let expr = this.equality();
+    let expr = this.ternary();
 
     while (this.match(TokenType.COMMA)) {
       const operator = this.previous();
-      const right = this.equality();
+      const right = this.ternary();
       expr = new Binary(expr, operator, right);
+    }
+
+    return expr;
+  }
+
+  private ternary() {
+    let expr = this.equality();
+
+    if (this.match(TokenType.QUESTION_MARK)) {
+      const left = this.ternary();
+
+      this.consume(TokenType.COLON, "Expected colon");
+
+      const right = this.ternary();
+
+      expr = new Conditional(expr, left, right);
     }
 
     return expr;
@@ -42,11 +58,17 @@ export class Parser {
     return expr;
   }
 
-
   private comparison() {
     let expr = this.term();
 
-    while (this.match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
+    while (
+      this.match(
+        TokenType.GREATER,
+        TokenType.GREATER_EQUAL,
+        TokenType.LESS,
+        TokenType.LESS_EQUAL
+      )
+    ) {
       const operator = this.previous();
       const right = this.term();
 
@@ -124,7 +146,7 @@ export class Parser {
       if (this.check(type)) {
         this.advance();
 
-        return true
+        return true;
       }
     }
 
@@ -140,7 +162,7 @@ export class Parser {
   private advance() {
     if (!this.isAtEnd()) this.current++;
 
-    return this.previous;
+    return this.previous();
   }
 
   private isAtEnd() {
@@ -156,7 +178,7 @@ export class Parser {
   }
 
   private error(token: Token, message: string) {
-    Lox.error(token.line, message, token)
+    Lox.error(token.line, message, token);
     return new ParserError();
   }
 

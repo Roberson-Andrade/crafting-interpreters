@@ -12,6 +12,8 @@ export interface Visitor<T> {
   visitUnaryExpr(expr: Unary): T;
 
   visitVariableExpr(expr: Variable): T;
+
+  visitConditionalExpr(expr: Conditional): T;
 }
 
 export abstract class Expr {
@@ -80,3 +82,12 @@ export class Literal extends Expr {
   }
 }
 
+export class Conditional extends Expr {
+  constructor(public condition: Expr, public thenBranch: Expr, public elseBranch: Expr) {
+    super();
+  }
+
+  override accept<T>(visitor: Visitor<T>): T {
+    return visitor.visitConditionalExpr(this);
+  }
+}
