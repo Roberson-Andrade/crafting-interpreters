@@ -54,7 +54,7 @@ export class Lox {
       } else {
         this.report(token.line, " at '" + token.lexeme + "'", message);
       }
-      return
+      return;
     }
 
     Lox.report(line, "", message);
@@ -67,8 +67,7 @@ export class Lox {
 
   static runtimeError(error: LoxRuntimeError) {
     if (error instanceof LoxRuntimeError) {
-      console.log(error.message +
-        "\n[line " + error.token.line + "]");
+      console.log(error.message + "\n[line " + error.token.line + "]");
     }
   }
 }

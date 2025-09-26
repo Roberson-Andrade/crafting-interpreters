@@ -1,6 +1,6 @@
-import type { Assign, Binary, Conditional, Expr, Grouping, Literal, Unary, Variable, Visitor } from "./expr";
+import type { Assign, Binary, Conditional, Expr, Grouping, Literal, Unary, Variable, ExprVisitor } from "./expr";
 
-export class AstPrinter implements Visitor<string> {
+export class AstPrinter implements ExprVisitor<string> {
   print(expr: Expr) {
     console.log(expr.accept<string>(this))
   }
