@@ -1,3 +1,4 @@
+import { Environment } from "./environment";
 import type {
   Binary,
   Expr,
@@ -5,15 +6,18 @@ import type {
   Literal,
   Unary,
   ExprVisitor,
+  Variable,
 } from "./expr";
 import { Lox } from "./lox";
 import { LoxRuntimeError } from "./runtime-error";
-import type { Expression, Print, Stmt, StmtVisitor } from "./stmt";
+import type { Expression, Print, Stmt, StmtVisitor, Var } from "./stmt";
 import type { Token } from "./token";
 import { TokenType } from "./token-type";
 
 export class Interpreter implements ExprVisitor<any>, StmtVisitor {
-  constructor() {}
+  private environment = new Environment();
+
+  constructor() { }
 
   public interpret(statements: Stmt[]) {
     try {
@@ -21,7 +25,9 @@ export class Interpreter implements ExprVisitor<any>, StmtVisitor {
         this.execute(statement);
       }
     } catch (error) {
-      Lox.runtimeError(error);
+      if (error instanceof LoxRuntimeError) {
+        Lox.runtimeError(error);
+      }
     }
   }
 
@@ -45,6 +51,10 @@ export class Interpreter implements ExprVisitor<any>, StmtVisitor {
     }
 
     return null;
+  }
+
+  visitVariableExpr(expr: Variable) {
+    return this.environment.get(expr.name);
   }
 
   visitBinaryExpr(expr: Binary): any {
@@ -99,6 +109,16 @@ export class Interpreter implements ExprVisitor<any>, StmtVisitor {
   visitPrintStatement(stmt: Print) {
     const value = this.evaluate(stmt.expression);
     console.log(this.stringify(value));
+  }
+
+  visitVarStmt(stmt: Var): void {
+    let value = null;
+
+    if (stmt.initializer) {
+      value = this.evaluate(stmt.initializer);
+    }
+
+    this.environment.define(stmt.name.lexeme, value);
   }
 
   private execute(statement: Stmt) {

@@ -38,7 +38,7 @@ export class Unary implements Expr {
 
 
 export class Variable implements Expr {
-  constructor(public operator: Token) {
+  constructor(public name: Token) {
 
   }
 

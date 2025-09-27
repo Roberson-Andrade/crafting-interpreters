@@ -1,7 +1,7 @@
-import { Binary, Conditional, Expr, Grouping, Literal, Unary } from "./expr";
+import { Binary, Conditional, Expr, Grouping, Literal, Unary, Variable } from "./expr";
 import { Lox } from "./lox";
 import { ParserError } from "./parser-error";
-import { Expression, Print, type Stmt } from "./stmt";
+import { Expression, Print, Var, type Stmt } from "./stmt";
 import { Token } from "./token";
 import { TokenType } from "./token-type";
 
@@ -14,12 +14,39 @@ export class Parser {
     const statements: Stmt[] = [];
 
     while (!this.isAtEnd()) {
-      statements.push(this.statement());
+      statements.push(this.declaration());
     }
 
     return statements;
   }
 
+  private declaration() {
+    try {
+      if (this.match(TokenType.VAR)) return this.varDeclaration();
+
+      return this.statement();
+    } catch (error) {
+      if (error instanceof ParserError) {
+        this.synchronize();
+
+        return null;
+      }
+    }
+  }
+
+  private varDeclaration() {
+    const name = this.consume(TokenType.IDENTIFIER, "Expect variable name");
+
+    let initializer = null;
+
+    if (this.match(TokenType.EQUAL)) {
+      initializer = this.expression();
+    }
+
+    this.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.");
+
+    return new Var(name, initializer);
+  }
   private statement() {
     if (this.match(TokenType.PRINT)) return this.printStatement();
 
@@ -147,6 +174,10 @@ export class Parser {
 
     if (this.match(TokenType.NUMBER, TokenType.STRING)) {
       return new Literal(this.previous().literal);
+    }
+
+    if (this.match(TokenType.IDENTIFIER)) {
+      return new Variable(this.previous());
     }
 
     if (this.match(TokenType.LEFT_PAREN)) {
