@@ -1,26 +1,35 @@
-import { Binary, Conditional, Expr, Grouping, Literal, Unary, Variable } from "./expr";
+import {
+  Assign,
+  Binary,
+  Conditional,
+  Expr,
+  Grouping,
+  Literal,
+  Unary,
+  Variable,
+} from "./expr";
 import { Lox } from "./lox";
 import { ParserError } from "./parser-error";
-import { Expression, Print, Var, type Stmt } from "./stmt";
+import { Block, Expression, Print, Var, type Stmt } from "./stmt";
 import { Token } from "./token";
 import { TokenType } from "./token-type";
 
 export class Parser {
   private current = 0;
 
-  constructor(private tokens: Token[]) { }
+  constructor(private tokens: Token[]) {}
 
   public parse() {
     const statements: Stmt[] = [];
 
     while (!this.isAtEnd()) {
-      statements.push(this.declaration());
+      statements.push(this.declaration()!);
     }
 
     return statements;
   }
 
-  private declaration() {
+  private declaration(): Stmt | null | undefined {
     try {
       if (this.match(TokenType.VAR)) return this.varDeclaration();
 
@@ -49,6 +58,7 @@ export class Parser {
   }
   private statement() {
     if (this.match(TokenType.PRINT)) return this.printStatement();
+    if (this.match(TokenType.LEFT_BRACE)) return new Block(this.block());
 
     return this.expressionStatement();
   }
@@ -69,12 +79,42 @@ export class Parser {
     return new Expression(expr);
   }
 
+  private assignment(): Expr {
+    const expr = this.ternary();
+
+    if (this.match(TokenType.EQUAL)) {
+      const equals = this.previous();
+      const value = this.assignment();
+
+      if (expr instanceof Variable) {
+        const name = expr.name;
+        return new Assign(name, value);
+      }
+
+      this.error(equals, "Invalid assignment target.");
+    }
+
+    return expr;
+  }
+
+  private block() {
+    const statements: Stmt[] = [];
+
+    while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+      statements.push(this.declaration()!);
+    }
+
+    this.consume(TokenType.RIGHT_BRACE, "Expect '}' after block.");
+
+    return statements;
+  }
+
   private expression() {
-    let expr = this.ternary();
+    let expr = this.assignment();
 
     while (this.match(TokenType.COMMA)) {
       const operator = this.previous();
-      const right = this.ternary();
+      const right = this.assignment();
       expr = new Binary(expr, operator, right);
     }
 

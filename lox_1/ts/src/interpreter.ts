@@ -7,17 +7,18 @@ import type {
   Unary,
   ExprVisitor,
   Variable,
+  Assign,
 } from "./expr";
 import { Lox } from "./lox";
 import { LoxRuntimeError } from "./runtime-error";
-import type { Expression, Print, Stmt, StmtVisitor, Var } from "./stmt";
+import type { Block, Expression, Print, Stmt, StmtVisitor, Var } from "./stmt";
 import type { Token } from "./token";
 import { TokenType } from "./token-type";
 
 export class Interpreter implements ExprVisitor<any>, StmtVisitor {
   private environment = new Environment();
 
-  constructor() { }
+  constructor() {}
 
   public interpret(statements: Stmt[]) {
     try {
@@ -54,6 +55,15 @@ export class Interpreter implements ExprVisitor<any>, StmtVisitor {
   }
 
   visitVariableExpr(expr: Variable) {
+    const value = this.environment.get(expr.name);
+
+    if (value === undefined) {
+      throw new LoxRuntimeError(
+        expr.name,
+        `Access to uninitialized variable ${expr.name.lexeme}`
+      );
+    }
+
     return this.environment.get(expr.name);
   }
 
@@ -112,13 +122,25 @@ export class Interpreter implements ExprVisitor<any>, StmtVisitor {
   }
 
   visitVarStmt(stmt: Var): void {
-    let value = null;
+    let value = undefined;
 
     if (stmt.initializer) {
       value = this.evaluate(stmt.initializer);
     }
 
     this.environment.define(stmt.name.lexeme, value);
+  }
+
+  visitAssignExpr(expr: Assign) {
+    const value = this.evaluate(expr.value);
+
+    this.environment.assign(expr.name, value);
+
+    return value;
+  }
+
+  visitBlockStatement(stmt: Block): void {
+    this.executeBlock(stmt.statements, new Environment(this.environment));
   }
 
   private execute(statement: Stmt) {
@@ -149,5 +171,19 @@ export class Interpreter implements ExprVisitor<any>, StmtVisitor {
     if (value === null) return "nil";
 
     return value;
+  }
+
+  private executeBlock(statements: Stmt[], environment: Environment) {
+    const previous = this.environment;
+
+    try {
+      this.environment = environment;
+
+      for (const statement of statements) {
+        this.execute(statement);
+      }
+    } finally {
+      this.environment = previous;
+    }
   }
 }

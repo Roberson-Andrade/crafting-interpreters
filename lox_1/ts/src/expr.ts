@@ -38,9 +38,7 @@ export class Unary implements Expr {
 
 
 export class Variable implements Expr {
-  constructor(public name: Token) {
-
-  }
+  constructor(public name: Token) { }
 
   accept<T>(visitor: ExprVisitor<T>): T {
     return visitor.visitVariableExpr(this);
@@ -48,9 +46,7 @@ export class Variable implements Expr {
 }
 
 export class Grouping implements Expr {
-  constructor(public expression: Expr) {
-
-  }
+  constructor(public expression: Expr) { }
 
   accept<T>(visitor: ExprVisitor<T>): T {
     return visitor.visitGroupingExpr(this);
@@ -58,9 +54,7 @@ export class Grouping implements Expr {
 }
 
 export class Assign implements Expr {
-  constructor(public token: Token, public expression: Expr) {
-
-  }
+  constructor(public name: Token, public value: Expr) { }
 
   accept<T>(visitor: ExprVisitor<T>): T {
     return visitor.visitAssignExpr(this);
@@ -69,9 +63,7 @@ export class Assign implements Expr {
 
 
 export class Literal implements Expr {
-  constructor(public value: unknown) {
-
-  }
+  constructor(public value: unknown) { }
 
   accept<T>(visitor: ExprVisitor<T>): T {
     return visitor.visitLiteralExpr(this);
@@ -79,9 +71,7 @@ export class Literal implements Expr {
 }
 
 export class Conditional implements Expr {
-  constructor(public condition: Expr, public thenBranch: Expr, public elseBranch: Expr) {
-
-  }
+  constructor(public condition: Expr, public thenBranch: Expr, public elseBranch: Expr) { }
 
   accept<T>(visitor: ExprVisitor<T>): T {
     return visitor.visitConditionalExpr(this);
