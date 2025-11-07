@@ -1,12 +1,21 @@
-import type { Assign, Binary, Conditional, Expr, Grouping, Literal, Unary, Variable, ExprVisitor } from "./expr";
+import type {
+  Assign,
+  Binary,
+  Expr,
+  Grouping,
+  Literal,
+  Unary,
+  Variable,
+  ExprVisitor,
+} from "./expr";
 
 export class AstPrinter implements ExprVisitor<string> {
   print(expr: Expr) {
-    console.log(expr.accept<string>(this))
+    console.log(expr.accept<string>(this));
   }
 
   parenthesize(name: string, ...exprs: Expr[]) {
-    const builder: string[] = []
+    const builder: string[] = [];
 
     builder.push("(", name);
 
@@ -39,15 +48,10 @@ export class AstPrinter implements ExprVisitor<string> {
   }
 
   visitAssignExpr(_: Assign): string {
-    return '';
-
+    return "";
   }
 
   visitVariableExpr(_: Variable): string {
-    return '';
-  }
-
-  visitConditionalExpr(expr: Conditional): string {
-    return this.parenthesize('?:', expr.condition, expr.thenBranch, expr.elseBranch);
+    return "";
   }
 }

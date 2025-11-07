@@ -13,7 +13,7 @@ export interface ExprVisitor<T> {
 
   visitVariableExpr(expr: Variable): T;
 
-  visitConditionalExpr(expr: Conditional): T;
+  visitLogicalExpr(expr: Logical): T;
 }
 
 export abstract class Expr {
@@ -21,7 +21,7 @@ export abstract class Expr {
 }
 
 export class Binary implements Expr {
-  constructor(public left: Expr, public operator: Token, public right: Expr) { }
+  constructor(public left: Expr, public operator: Token, public right: Expr) {}
 
   accept<T>(visitor: ExprVisitor<T>): T {
     return visitor.visitBinaryExpr(this);
@@ -29,16 +29,15 @@ export class Binary implements Expr {
 }
 
 export class Unary implements Expr {
-  constructor(public operator: Token, public right: Expr) { }
+  constructor(public operator: Token, public right: Expr) {}
 
   accept<T>(visitor: ExprVisitor<T>): T {
     return visitor.visitUnaryExpr(this);
   }
 }
 
-
 export class Variable implements Expr {
-  constructor(public name: Token) { }
+  constructor(public name: Token) {}
 
   accept<T>(visitor: ExprVisitor<T>): T {
     return visitor.visitVariableExpr(this);
@@ -46,7 +45,7 @@ export class Variable implements Expr {
 }
 
 export class Grouping implements Expr {
-  constructor(public expression: Expr) { }
+  constructor(public expression: Expr) {}
 
   accept<T>(visitor: ExprVisitor<T>): T {
     return visitor.visitGroupingExpr(this);
@@ -54,26 +53,25 @@ export class Grouping implements Expr {
 }
 
 export class Assign implements Expr {
-  constructor(public name: Token, public value: Expr) { }
+  constructor(public name: Token, public value: Expr) {}
 
   accept<T>(visitor: ExprVisitor<T>): T {
     return visitor.visitAssignExpr(this);
   }
 }
 
-
 export class Literal implements Expr {
-  constructor(public value: unknown) { }
+  constructor(public value: unknown) {}
 
   accept<T>(visitor: ExprVisitor<T>): T {
     return visitor.visitLiteralExpr(this);
   }
 }
 
-export class Conditional implements Expr {
-  constructor(public condition: Expr, public thenBranch: Expr, public elseBranch: Expr) { }
+export class Logical implements Expr {
+  constructor(public left: Expr, public operator: Token, public right: Expr) {}
 
   accept<T>(visitor: ExprVisitor<T>): T {
-    return visitor.visitConditionalExpr(this);
+    return visitor.visitLogicalExpr(this);
   }
 }

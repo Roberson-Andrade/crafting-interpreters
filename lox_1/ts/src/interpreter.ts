@@ -8,10 +8,20 @@ import type {
   ExprVisitor,
   Variable,
   Assign,
+  Logical,
 } from "./expr";
 import { Lox } from "./lox";
 import { LoxRuntimeError } from "./runtime-error";
-import type { Block, Expression, Print, Stmt, StmtVisitor, Var } from "./stmt";
+import type {
+  Block,
+  Expression,
+  If,
+  Print,
+  Stmt,
+  StmtVisitor,
+  Var,
+  While,
+} from "./stmt";
 import type { Token } from "./token";
 import { TokenType } from "./token-type";
 
@@ -116,6 +126,26 @@ export class Interpreter implements ExprVisitor<any>, StmtVisitor {
     this.evaluate(expr.expression);
   }
 
+  visitIfStmt(stmt: If): void {
+    if (this.isTruthy(this.evaluate(stmt.condition))) {
+      this.execute(stmt.thenBranch);
+    } else if (stmt.elseBranch !== null) {
+      this.execute(stmt.elseBranch);
+    }
+  }
+
+  visitLogicalExpr(expr: Logical) {
+    const left = this.evaluate(expr.left);
+
+    if (expr.operator.type === TokenType.OR) {
+      if (this.isTruthy(expr.left)) return left;
+    } else {
+      if (!this.isTruthy(expr.left)) return left;
+    }
+
+    return this.evaluate(expr.right);
+  }
+
   visitPrintStatement(stmt: Print) {
     const value = this.evaluate(stmt.expression);
     console.log(this.stringify(value));
@@ -129,6 +159,12 @@ export class Interpreter implements ExprVisitor<any>, StmtVisitor {
     }
 
     this.environment.define(stmt.name.lexeme, value);
+  }
+
+  visitWhileStmt(stmt: While): void {
+    while (this.isTruthy(this.evaluate(stmt.condition))) {
+      this.execute(stmt.body);
+    }
   }
 
   visitAssignExpr(expr: Assign) {
