@@ -14,6 +14,8 @@ export interface ExprVisitor<T> {
   visitVariableExpr(expr: Variable): T;
 
   visitLogicalExpr(expr: Logical): T;
+
+  visitCallExpr(expr: Call): T;
 }
 
 export abstract class Expr {
@@ -73,5 +75,13 @@ export class Logical implements Expr {
 
   accept<T>(visitor: ExprVisitor<T>): T {
     return visitor.visitLogicalExpr(this);
+  }
+}
+
+export class Call implements Expr {
+  constructor(public callee: Expr, public paren: Token, public args: Expr[]) {}
+
+  accept<T>(visitor: ExprVisitor<T>): T {
+    return visitor.visitCallExpr(this);
   }
 }

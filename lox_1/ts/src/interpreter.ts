@@ -9,12 +9,14 @@ import type {
   Variable,
   Assign,
   Logical,
+  Call,
 } from "./expr";
 import { Lox } from "./lox";
 import { LoxRuntimeError } from "./runtime-error";
 import type {
   Block,
   Expression,
+  Function,
   If,
   Print,
   Stmt,
@@ -24,11 +26,17 @@ import type {
 } from "./stmt";
 import type { Token } from "./token";
 import { TokenType } from "./token-type";
+import { LoxCallable } from "./lox-callable";
+import { Clock } from "./native-functions/clock";
+import { LoxFunction } from "./lox-function";
 
 export class Interpreter implements ExprVisitor<any>, StmtVisitor {
-  private environment = new Environment();
+  public globals = new Environment();
+  private environment = this.globals;
 
-  constructor() {}
+  constructor() {
+    this.globals.define("clock", Clock);
+  }
 
   public interpret(statements: Stmt[]) {
     try {
@@ -126,6 +134,11 @@ export class Interpreter implements ExprVisitor<any>, StmtVisitor {
     this.evaluate(expr.expression);
   }
 
+  visitFunctionStmt(stmt: Function): void {
+    const fun = new LoxFunction(stmt);
+    this.environment.define(stmt.name.lexeme, fun);
+  }
+
   visitIfStmt(stmt: If): void {
     if (this.isTruthy(this.evaluate(stmt.condition))) {
       this.execute(stmt.thenBranch);
@@ -146,7 +159,7 @@ export class Interpreter implements ExprVisitor<any>, StmtVisitor {
     return this.evaluate(expr.right);
   }
 
-  visitPrintStatement(stmt: Print) {
+  visitPrintStmt(stmt: Print) {
     const value = this.evaluate(stmt.expression);
     console.log(this.stringify(value));
   }
@@ -175,8 +188,34 @@ export class Interpreter implements ExprVisitor<any>, StmtVisitor {
     return value;
   }
 
-  visitBlockStatement(stmt: Block): void {
+  visitBlockStmt(stmt: Block): void {
     this.executeBlock(stmt.statements, new Environment(this.environment));
+  }
+
+  visitCallExpr(expr: Call) {
+    const callee = this.evaluate(expr.callee);
+
+    const args = [];
+
+    for (const arg of expr.args) {
+      args.push(this.evaluate(arg));
+    }
+
+    if (!(callee instanceof LoxCallable)) {
+      throw new LoxRuntimeError(
+        expr.paren,
+        "can only call functions and classes."
+      );
+    }
+
+    if (args.length !== callee.arity) {
+      throw new LoxRuntimeError(
+        expr.paren,
+        `Expected ${callee.arity} arguments but got ${args.length}.`
+      );
+    }
+
+    return callee.call(this, args);
   }
 
   private execute(statement: Stmt) {
@@ -209,7 +248,7 @@ export class Interpreter implements ExprVisitor<any>, StmtVisitor {
     return value;
   }
 
-  private executeBlock(statements: Stmt[], environment: Environment) {
+  public executeBlock(statements: Stmt[], environment: Environment) {
     const previous = this.environment;
 
     try {

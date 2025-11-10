@@ -7,11 +7,12 @@ export abstract class Stmt {
 
 export interface StmtVisitor {
   visitExpressionStmt(expr: Expression): void;
-  visitPrintStatement(stmt: Print): void;
+  visitPrintStmt(stmt: Print): void;
   visitVarStmt(stmt: Var): void;
-  visitBlockStatement(stmt: Block): void;
+  visitBlockStmt(stmt: Block): void;
   visitIfStmt(stmt: If): void;
   visitWhileStmt(stmt: While): void;
+  visitFunctionStmt(stmt: Function): void;
 }
 
 export class Expression implements Stmt {
@@ -26,7 +27,7 @@ export class Print implements Stmt {
   constructor(public expression: Expr) {}
 
   accept(visitor: StmtVisitor): void {
-    return visitor.visitPrintStatement(this);
+    return visitor.visitPrintStmt(this);
   }
 }
 
@@ -42,7 +43,7 @@ export class Block implements Stmt {
   constructor(public statements: Stmt[]) {}
 
   accept(visitor: StmtVisitor): void {
-    return visitor.visitBlockStatement(this);
+    return visitor.visitBlockStmt(this);
   }
 }
 
@@ -63,5 +64,17 @@ export class While {
 
   accept(visitor: StmtVisitor): void {
     return visitor.visitWhileStmt(this);
+  }
+}
+
+export class Function {
+  constructor(
+    public name: Token,
+    public params: Token[],
+    public body: Stmt[]
+  ) {}
+
+  accept(visitor: StmtVisitor): void {
+    return visitor.visitFunctionStmt(this);
   }
 }
