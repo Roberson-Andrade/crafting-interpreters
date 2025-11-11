@@ -13,24 +13,15 @@ import type {
 } from "./expr";
 import { Lox } from "./lox";
 import { LoxRuntimeError } from "./runtime-error";
-import type {
-  Block,
-  Expression,
-  Function,
-  If,
-  Print,
-  Stmt,
-  StmtVisitor,
-  Var,
-  While,
-} from "./stmt";
+import type { Stmt } from "./stmt";
 import type { Token } from "./token";
 import { TokenType } from "./token-type";
 import { LoxCallable } from "./lox-callable";
 import { Clock } from "./native-functions/clock";
 import { LoxFunction } from "./lox-function";
+import { Return } from "./return";
 
-export class Interpreter implements ExprVisitor<any>, StmtVisitor {
+export class Interpreter implements ExprVisitor<any>, Stmt.StmtVisitor {
   public globals = new Environment();
   private environment = this.globals;
 
@@ -38,7 +29,7 @@ export class Interpreter implements ExprVisitor<any>, StmtVisitor {
     this.globals.define("clock", Clock);
   }
 
-  public interpret(statements: Stmt[]) {
+  public interpret(statements: Stmt.Stmt[]) {
     try {
       for (const statement of statements) {
         this.execute(statement);
@@ -130,16 +121,16 @@ export class Interpreter implements ExprVisitor<any>, StmtVisitor {
     return null;
   }
 
-  visitExpressionStmt(expr: Expression): void {
+  visitExpressionStmt(expr: Stmt.Expression): void {
     this.evaluate(expr.expression);
   }
 
-  visitFunctionStmt(stmt: Function): void {
-    const fun = new LoxFunction(stmt);
+  visitFunctionStmt(stmt: Stmt.Function): void {
+    const fun = new LoxFunction(stmt, this.environment);
     this.environment.define(stmt.name.lexeme, fun);
   }
 
-  visitIfStmt(stmt: If): void {
+  visitIfStmt(stmt: Stmt.If): void {
     if (this.isTruthy(this.evaluate(stmt.condition))) {
       this.execute(stmt.thenBranch);
     } else if (stmt.elseBranch !== null) {
@@ -159,12 +150,20 @@ export class Interpreter implements ExprVisitor<any>, StmtVisitor {
     return this.evaluate(expr.right);
   }
 
-  visitPrintStmt(stmt: Print) {
+  visitPrintStmt(stmt: Stmt.Print) {
     const value = this.evaluate(stmt.expression);
     console.log(this.stringify(value));
   }
 
-  visitVarStmt(stmt: Var): void {
+  visitReturnStmt(stmt: Stmt.Return) {
+    let value = null;
+
+    if (stmt.value !== null) value = this.evaluate(stmt.value);
+
+    throw new Return(value);
+  }
+
+  visitVarStmt(stmt: Stmt.Var): void {
     let value = undefined;
 
     if (stmt.initializer) {
@@ -174,7 +173,7 @@ export class Interpreter implements ExprVisitor<any>, StmtVisitor {
     this.environment.define(stmt.name.lexeme, value);
   }
 
-  visitWhileStmt(stmt: While): void {
+  visitWhileStmt(stmt: Stmt.While): void {
     while (this.isTruthy(this.evaluate(stmt.condition))) {
       this.execute(stmt.body);
     }
@@ -188,7 +187,7 @@ export class Interpreter implements ExprVisitor<any>, StmtVisitor {
     return value;
   }
 
-  visitBlockStmt(stmt: Block): void {
+  visitBlockStmt(stmt: Stmt.Block): void {
     this.executeBlock(stmt.statements, new Environment(this.environment));
   }
 
@@ -218,7 +217,7 @@ export class Interpreter implements ExprVisitor<any>, StmtVisitor {
     return callee.call(this, args);
   }
 
-  private execute(statement: Stmt) {
+  private execute(statement: Stmt.Stmt) {
     statement.accept(this);
   }
 
@@ -248,7 +247,7 @@ export class Interpreter implements ExprVisitor<any>, StmtVisitor {
     return value;
   }
 
-  public executeBlock(statements: Stmt[], environment: Environment) {
+  public executeBlock(statements: Stmt.Stmt[], environment: Environment) {
     const previous = this.environment;
 
     try {

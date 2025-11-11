@@ -1,10 +1,11 @@
 import { Environment } from "./environment";
 import type { Interpreter } from "./interpreter";
 import { LoxCallable } from "./lox-callable";
-import type { Function } from "./stmt";
+import type { Return } from "./return";
+import type { Stmt } from "./stmt";
 
 export class LoxFunction extends LoxCallable {
-  constructor(public declaration: Function) {
+  constructor(public declaration: Stmt.Function, private closure: Environment) {
     super();
   }
 
@@ -13,13 +14,19 @@ export class LoxFunction extends LoxCallable {
   }
 
   override call(interpreter: Interpreter, args: any[]) {
-    const environment = new Environment(interpreter.globals);
+    const environment = new Environment(this.closure);
 
     for (let i = 0; i < this.declaration.params.length; i++) {
       environment.define(this.declaration.params[i]!.lexeme!, args[i]);
     }
 
-    interpreter.executeBlock(this.declaration.body, environment);
+    try {
+      interpreter.executeBlock(this.declaration.body, environment);
+    } catch (returnValue: unknown) {
+      return (returnValue as Return).value;
+    }
+
+    return null;
   }
 
   [Symbol.toPrimitive]() {

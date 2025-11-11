@@ -1,80 +1,91 @@
 import type { Expr } from "./expr";
 import type { Token } from "./token";
 
-export abstract class Stmt {
-  abstract accept(visitor: StmtVisitor): void;
-}
-
-export interface StmtVisitor {
-  visitExpressionStmt(expr: Expression): void;
-  visitPrintStmt(stmt: Print): void;
-  visitVarStmt(stmt: Var): void;
-  visitBlockStmt(stmt: Block): void;
-  visitIfStmt(stmt: If): void;
-  visitWhileStmt(stmt: While): void;
-  visitFunctionStmt(stmt: Function): void;
-}
-
-export class Expression implements Stmt {
-  constructor(public expression: Expr) {}
-
-  accept(visitor: StmtVisitor): void {
-    return visitor.visitExpressionStmt(this);
+export namespace Stmt {
+  export abstract class Stmt {
+    abstract accept(visitor: StmtVisitor): void;
   }
-}
 
-export class Print implements Stmt {
-  constructor(public expression: Expr) {}
-
-  accept(visitor: StmtVisitor): void {
-    return visitor.visitPrintStmt(this);
+  export interface StmtVisitor {
+    visitExpressionStmt(expr: Expression): void;
+    visitPrintStmt(stmt: Print): void;
+    visitVarStmt(stmt: Var): void;
+    visitBlockStmt(stmt: Block): void;
+    visitIfStmt(stmt: If): void;
+    visitWhileStmt(stmt: While): void;
+    visitFunctionStmt(stmt: Function): void;
+    visitReturnStmt(stmt: Return): void;
   }
-}
 
-export class Var implements Stmt {
-  constructor(public name: Token, public initializer: Expr | null) {}
+  export class Expression implements Stmt {
+    constructor(public expression: Expr) {}
 
-  accept(visitor: StmtVisitor): void {
-    return visitor.visitVarStmt(this);
+    accept(visitor: StmtVisitor): void {
+      return visitor.visitExpressionStmt(this);
+    }
   }
-}
 
-export class Block implements Stmt {
-  constructor(public statements: Stmt[]) {}
+  export class Print implements Stmt {
+    constructor(public expression: Expr) {}
 
-  accept(visitor: StmtVisitor): void {
-    return visitor.visitBlockStmt(this);
+    accept(visitor: StmtVisitor): void {
+      return visitor.visitPrintStmt(this);
+    }
   }
-}
 
-export class If {
-  constructor(
-    public condition: Expr,
-    public thenBranch: Stmt,
-    public elseBranch: Stmt | null
-  ) {}
+  export class Var implements Stmt {
+    constructor(public name: Token, public initializer: Expr | null) {}
 
-  accept(visitor: StmtVisitor): void {
-    return visitor.visitIfStmt(this);
+    accept(visitor: StmtVisitor): void {
+      return visitor.visitVarStmt(this);
+    }
   }
-}
 
-export class While {
-  constructor(public condition: Expr, public body: Stmt) {}
+  export class Block implements Stmt {
+    constructor(public statements: Stmt[]) {}
 
-  accept(visitor: StmtVisitor): void {
-    return visitor.visitWhileStmt(this);
+    accept(visitor: StmtVisitor): void {
+      return visitor.visitBlockStmt(this);
+    }
   }
-}
 
-export class Function {
-  constructor(
-    public name: Token,
-    public params: Token[],
-    public body: Stmt[]
-  ) {}
+  export class If {
+    constructor(
+      public condition: Expr,
+      public thenBranch: Stmt,
+      public elseBranch: Stmt | null
+    ) {}
 
-  accept(visitor: StmtVisitor): void {
-    return visitor.visitFunctionStmt(this);
+    accept(visitor: StmtVisitor): void {
+      return visitor.visitIfStmt(this);
+    }
+  }
+
+  export class While {
+    constructor(public condition: Expr, public body: Stmt) {}
+
+    accept(visitor: StmtVisitor): void {
+      return visitor.visitWhileStmt(this);
+    }
+  }
+
+  export class Function {
+    constructor(
+      public name: Token,
+      public params: Token[],
+      public body: Stmt[]
+    ) {}
+
+    accept(visitor: StmtVisitor): void {
+      return visitor.visitFunctionStmt(this);
+    }
+  }
+
+  export class Return {
+    constructor(public keyword: Token, public value: Expr | null) {}
+
+    accept(visitor: StmtVisitor): void {
+      return visitor.visitReturnStmt(this);
+    }
   }
 }

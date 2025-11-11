@@ -11,16 +11,7 @@ import {
 } from "./expr";
 import { Lox } from "./lox";
 import { ParserError } from "./parser-error";
-import {
-  Block,
-  Expression,
-  Function,
-  If,
-  Print,
-  Var,
-  While,
-  type Stmt,
-} from "./stmt";
+import { Stmt } from "./stmt";
 import { Token } from "./token";
 import { TokenType } from "./token-type";
 
@@ -30,7 +21,7 @@ export class Parser {
   constructor(private tokens: Token[]) {}
 
   public parse() {
-    const statements: Stmt[] = [];
+    const statements: Stmt.Stmt[] = [];
 
     while (!this.isAtEnd()) {
       statements.push(this.declaration()!);
@@ -39,7 +30,7 @@ export class Parser {
     return statements;
   }
 
-  private declaration(): Stmt | null | undefined {
+  private declaration(): Stmt.Stmt | null | undefined {
     try {
       if (this.match(TokenType.FUN)) return this.fun("function");
       if (this.match(TokenType.VAR)) return this.varDeclaration();
@@ -81,7 +72,7 @@ export class Parser {
 
     const body = this.block();
 
-    return new Function(name, parameters, body);
+    return new Stmt.Function(name, parameters, body);
   }
 
   private varDeclaration() {
@@ -95,23 +86,24 @@ export class Parser {
 
     this.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.");
 
-    return new Var(name, initializer);
+    return new Stmt.Var(name, initializer);
   }
 
   private statement() {
     if (this.match(TokenType.FOR)) return this.forStatement();
     if (this.match(TokenType.IF)) return this.ifStatement();
     if (this.match(TokenType.PRINT)) return this.printStatement();
+    if (this.match(TokenType.RETURN)) return this.returnStatement();
     if (this.match(TokenType.WHILE)) return this.whileStatement();
-    if (this.match(TokenType.LEFT_BRACE)) return new Block(this.block());
+    if (this.match(TokenType.LEFT_BRACE)) return new Stmt.Block(this.block());
 
     return this.expressionStatement();
   }
 
-  private forStatement(): Stmt {
+  private forStatement(): Stmt.Stmt {
     this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'");
 
-    let initializer: Stmt | null;
+    let initializer: Stmt.Stmt | null;
 
     if (this.match(TokenType.SEMICOLON)) {
       initializer = null;
@@ -140,23 +132,23 @@ export class Parser {
     let body = this.statement();
 
     if (increment) {
-      body = new Block([body, new Expression(increment)]);
+      body = new Stmt.Block([body, new Stmt.Expression(increment)]);
     }
 
     if (!condition) {
       condition = new Literal(true);
     }
 
-    body = new While(condition, body);
+    body = new Stmt.While(condition, body);
 
     if (initializer) {
-      body = new Block([initializer, body]);
+      body = new Stmt.Block([initializer, body]);
     }
 
     return body;
   }
 
-  private ifStatement(): Stmt {
+  private ifStatement(): Stmt.Stmt {
     this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.");
 
     const expression = this.expression();
@@ -165,13 +157,13 @@ export class Parser {
 
     const thenBranch = this.statement();
 
-    let elseBranch: Stmt | null = null;
+    let elseBranch: Stmt.Stmt | null = null;
 
     if (this.match(TokenType.ELSE)) {
       elseBranch = this.statement();
     }
 
-    return new If(expression, thenBranch, elseBranch);
+    return new Stmt.If(expression, thenBranch, elseBranch);
   }
 
   private printStatement() {
@@ -179,10 +171,24 @@ export class Parser {
 
     this.consume(TokenType.SEMICOLON, "Expect ';' after value.");
 
-    return new Print(value);
+    return new Stmt.Print(value);
   }
 
-  private whileStatement(): Stmt {
+  private returnStatement() {
+    const keyword = this.previous();
+
+    let value: Expr | null = null;
+
+    if (!this.check(TokenType.SEMICOLON)) {
+      value = this.expression();
+    }
+
+    this.consume(TokenType.SEMICOLON, "Expect ';' after return value.");
+
+    return new Stmt.Return(keyword, value);
+  }
+
+  private whileStatement(): Stmt.Stmt {
     this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'");
 
     const condition = this.expression();
@@ -191,11 +197,11 @@ export class Parser {
 
     const body = this.statement();
 
-    return new While(condition, body);
+    return new Stmt.While(condition, body);
   }
 
   private block() {
-    const statements: Stmt[] = [];
+    const statements: Stmt.Stmt[] = [];
 
     while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
       statements.push(this.declaration()!);
@@ -211,7 +217,7 @@ export class Parser {
 
     this.consume(TokenType.SEMICOLON, "Expect ';' after expression.");
 
-    return new Expression(expr);
+    return new Stmt.Expression(expr);
   }
 
   private expression() {
