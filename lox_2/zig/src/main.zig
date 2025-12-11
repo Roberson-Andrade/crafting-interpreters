@@ -16,5 +16,15 @@ pub fn main() !void {
     try chunk.write(constant, 123);
 
     try chunk.write(@intFromEnum(OpCode.OP_RETURN), 123);
+
+    try chunk.write(@intFromEnum(OpCode.OP_CONSTANT), 125);
+    try chunk.write(constant, 125);
+
+    try chunk.write(@intFromEnum(OpCode.OP_RETURN), 125);
+
+    try chunk.write(@intFromEnum(OpCode.OP_CONSTANT), 156);
+    try chunk.write(constant, 156);
+
+    try chunk.write(@intFromEnum(OpCode.OP_RETURN), 156);
     chunk.disassembleChunk("test chunk");
 }
