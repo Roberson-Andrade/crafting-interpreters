@@ -28,6 +28,26 @@ pub const Chunk = struct {
         try self.writeLine(line);
     }
 
+    pub fn writeConstant(self: *Chunk, value: ValueType, line: usize) !void {
+        try self.values.append(value);
+
+        const index = self.values.items.len - 1;
+
+        if (index > 255) {
+            const mask = 0xFF;
+
+            const parsedIndex: u24 = @intCast(index);
+
+            try self.write(@intFromEnum(OpCode.OP_CONSTANT_LONG), line);
+            try self.write(@intCast((parsedIndex >> 16) & mask), line);
+            try self.write(@intCast((parsedIndex >> 8) & mask), line);
+            try self.write(@intCast(parsedIndex & mask), line);
+        } else {
+            try self.write(@intFromEnum(OpCode.OP_CONSTANT), line);
+            try self.write(@intCast(index), line);
+        }
+    }
+
     pub fn writeLine(self: *Chunk, line: usize) !void {
         if (self.lines.items.len > 0) {
             const last = &self.lines.items[self.lines.items.len - 1];
@@ -90,10 +110,22 @@ pub const Chunk = struct {
                 std.debug.print("{}\n", .{self.values.items[constIdx]});
                 break :vm offset + 2;
             },
-            // else => {
-            //     std.debug.print("Unknown opcode {n}\n", .{instruction});
-            //     break :vm offset + 1;
-            // },
+            .OP_CONSTANT_LONG => {
+                if (offset + 3 >= self.code.items.len) {
+                    std.debug.print("OP_CONSTANT_LONG (invalid: missing operands)\n", .{});
+                    break :vm offset + 1;
+                }
+
+                const three = @as(u24, self.code.items[offset + 1]) << 16;
+                const two = @as(u24, self.code.items[offset + 2]) << 8;
+                const one = @as(u24, self.code.items[offset + 3]);
+
+                const index: u24 = three | two | one;
+
+                std.debug.print("OP_CONSTANT_LONG {d:0>4} ", .{index});
+                std.debug.print("{}\n", .{self.values.items[index]});
+                break :vm offset + 4;
+            },
         };
     }
 

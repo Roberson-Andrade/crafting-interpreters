@@ -1,4 +1,1 @@
-pub const OpCode = enum(u8) {
-    OP_RETURN,
-    OP_CONSTANT,
-};
+pub const OpCode = enum(u8) { OP_RETURN, OP_CONSTANT, OP_CONSTANT_LONG };

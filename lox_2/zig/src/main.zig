@@ -9,22 +9,10 @@ pub fn main() !void {
 
     var chunk = Chunk.init(allocator);
 
-    const index: u8 = @intCast(try chunk.addConstant(1.2));
-    const constant = @as(u8, index);
+    for (0..260) |index| {
+        const float: f64 = @floatFromInt(index);
+        try chunk.writeConstant(12.5 * float, index);
+    }
 
-    try chunk.write(@intFromEnum(OpCode.OP_CONSTANT), 123);
-    try chunk.write(constant, 123);
-
-    try chunk.write(@intFromEnum(OpCode.OP_RETURN), 123);
-
-    try chunk.write(@intFromEnum(OpCode.OP_CONSTANT), 125);
-    try chunk.write(constant, 125);
-
-    try chunk.write(@intFromEnum(OpCode.OP_RETURN), 125);
-
-    try chunk.write(@intFromEnum(OpCode.OP_CONSTANT), 156);
-    try chunk.write(constant, 156);
-
-    try chunk.write(@intFromEnum(OpCode.OP_RETURN), 156);
     chunk.disassembleChunk("test chunk");
 }
